@@ -23,8 +23,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import models.CopyTask;
 import models.Project;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -54,12 +57,31 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
      */
     public Copier() {
         initComponents();
-        
+        copyTasksTbe.getModel().addTableModelListener(new CheckBoxModelListener());
+    }
+    
+    public class CheckBoxModelListener implements TableModelListener {
+
+  
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            int row = e.getFirstRow();
+            int column = e.getColumn();
+            if (column == JTableUtils.getColumnByName(copyTasksTbe, "Select")) {
+                TableModel model = (TableModel) e.getSource();
+                String columnName = model.getColumnName(column);
+                Boolean checked = (Boolean) model.getValueAt(row, column);
+               
+                copyTasks.get(row).setSelected(checked);
+                
+            }
+        }
     }
     
     
     private CopyTask getCopyTaskFromForm(){
         CopyTask copyTask = new CopyTask();
+        copyTask.setTaskName(taskNameTxt.getText());
         copyTask.setDestination(DestinationTxt.getText());
         copyTask.setOrigin(originTxt.getText());
         
@@ -110,6 +132,10 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         jButton1 = new javax.swing.JButton();
         copyAllBtn = new javax.swing.JButton();
         deleteSelectedBtn = new javax.swing.JButton();
+        taskNameTxt = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        moveUpBtn = new javax.swing.JButton();
+        moveDownBtn = new javax.swing.JButton();
         jMenuBar2 = new javax.swing.JMenuBar();
         jMenu3 = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
@@ -130,12 +156,19 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
 
             },
             new String [] {
-                "Origin", "Destination path", "Status"
+                "Task name", "Origin", "Destination path", "Status", "Select"
             }
         ) {
-            boolean[] canEdit = new boolean [] {
-                true, true, false
+            Class[] types = new Class [] {
+                java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Object.class, java.lang.Boolean.class
             };
+            boolean[] canEdit = new boolean [] {
+                false, true, true, false, true
+            };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -147,6 +180,14 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             }
         });
         jScrollPane1.setViewportView(copyTasksTbe);
+        if (copyTasksTbe.getColumnModel().getColumnCount() > 0) {
+            copyTasksTbe.getColumnModel().getColumn(3).setMinWidth(100);
+            copyTasksTbe.getColumnModel().getColumn(3).setPreferredWidth(100);
+            copyTasksTbe.getColumnModel().getColumn(3).setMaxWidth(100);
+            copyTasksTbe.getColumnModel().getColumn(4).setMinWidth(60);
+            copyTasksTbe.getColumnModel().getColumn(4).setPreferredWidth(60);
+            copyTasksTbe.getColumnModel().getColumn(4).setMaxWidth(60);
+        }
 
         jLabel2.setText("File/Directory to copy:");
 
@@ -170,6 +211,22 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         deleteSelectedBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteSelectedBtnActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Task name:");
+
+        moveUpBtn.setText("Move up");
+        moveUpBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                moveUpBtnActionPerformed(evt);
+            }
+        });
+
+        moveDownBtn.setText("Move down");
+        moveDownBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                moveDownBtnActionPerformed(evt);
             }
         });
 
@@ -202,39 +259,47 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(copyAllBtn, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(35, 35, 35)
-                        .addComponent(deleteSelectedBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(43, 43, 43)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 786, Short.MAX_VALUE)
-                            .addComponent(copyAllBtn, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addGroup(layout.createSequentialGroup()
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                                    .addComponent(jButton1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, layout.createSequentialGroup()
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                            .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                                        .addGap(18, 18, 18)
-                                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                            .addComponent(DestinationTxt, javax.swing.GroupLayout.DEFAULT_SIZE, 612, Short.MAX_VALUE)
-                                            .addComponent(originTxt)
-                                            .addComponent(projectNameTxt, javax.swing.GroupLayout.Alignment.TRAILING))))
-                                .addGap(14, 14, 14)))))
-                .addContainerGap())
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addGap(18, 18, 18)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(DestinationTxt)
+                                    .addComponent(originTxt)
+                                    .addComponent(projectNameTxt, javax.swing.GroupLayout.Alignment.TRAILING)))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                    .addComponent(deleteSelectedBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 130, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addComponent(moveUpBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                    .addComponent(moveDownBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 728, Short.MAX_VALUE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 142, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(18, 18, 18)
+                                .addComponent(taskNameTxt)))
+                        .addContainerGap())))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(37, 37, 37)
+                .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(projectNameTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel4)
+                    .addComponent(taskNameTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(5, 5, 5)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(originTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
@@ -242,12 +307,17 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(DestinationTxt, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(4, 4, 4)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jButton1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 270, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(deleteSelectedBtn)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 245, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(deleteSelectedBtn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(moveUpBtn)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(moveDownBtn)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(copyAllBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
@@ -269,8 +339,8 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
     
     private void copyAllBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyAllBtnActionPerformed
         // TODO add your handling code here:
-        
-        for (CopyTask copyTask : copyTasks){
+        copyTasks.stream().filter(copyTask -> (copyTask.isSelected())).forEachOrdered(copyTask -> {
+            
             try {
                 String originFile = "\""+ copyTask.getOrigin()+ "\"";
                 String destFile = "\""+copyTask.getDestination() + "\"";
@@ -282,7 +352,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
                 Logger.getLogger(Copier.class.getName()).log(Level.SEVERE, null, ex);
                 copyTask.setStatus("Error :(");
             }
-        }
+        });
         
         printAllCopyTasks();
         reloadCopyTasksTbe(false);
@@ -327,6 +397,32 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         });
     }//GEN-LAST:event_jMenuItem2ActionPerformed
 
+    private void moveUpBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_moveUpBtnActionPerformed
+        int selectedIdx = this.copyTasksTbe.getSelectedRow();
+        if (selectedIdx == 0 || selectedIdx == -1){
+            return;
+        }
+        CopyTask copyTask = copyTasks.get(selectedIdx);
+        copyTasks.remove(selectedIdx);
+        copyTasks.add(selectedIdx-1,copyTask);
+
+        reloadCopyTasksTbe(false);
+        this.copyTasksTbe.setRowSelectionInterval(selectedIdx-1,selectedIdx-1 );
+    }//GEN-LAST:event_moveUpBtnActionPerformed
+
+    private void moveDownBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_moveDownBtnActionPerformed
+        int selectedIdx = this.copyTasksTbe.getSelectedRow();
+        if (selectedIdx == copyTasks.size() -1 || selectedIdx == -1){
+            return;
+        }
+        CopyTask copyTask = copyTasks.get(selectedIdx);
+        copyTasks.remove(selectedIdx);
+        copyTasks.add(selectedIdx+1,copyTask);
+
+        reloadCopyTasksTbe(false);
+        this.copyTasksTbe.setRowSelectionInterval(selectedIdx+1,selectedIdx+1 );
+    }//GEN-LAST:event_moveDownBtnActionPerformed
+
     
     private void reloadCopyTasksTbe(boolean cleanStatuses){
         
@@ -341,9 +437,11 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             }
             
             dtm.addRow(new Object[0]);
+            dtm.setValueAt(copyTask.getTaskName(), indice.get(), JTableUtils.getColumnByName(copyTasksTbe, "Task name"));
             dtm.setValueAt(copyTask.getOrigin(), indice.get(), JTableUtils.getColumnByName(copyTasksTbe, "Origin"));
             dtm.setValueAt(copyTask.getDestination(), indice.get(), JTableUtils.getColumnByName(copyTasksTbe, "Destination path"));           
             dtm.setValueAt(copyTask.getStatus(), indice.get(), JTableUtils.getColumnByName(copyTasksTbe, "Status"));
+            dtm.setValueAt(copyTask.isSelected(), indice.get(), JTableUtils.getColumnByName(copyTasksTbe, "Select"));
       
             indice.incrementAndGet();
         });
@@ -451,6 +549,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenu jMenu3;
@@ -459,8 +558,11 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JButton moveDownBtn;
+    private javax.swing.JButton moveUpBtn;
     private javax.swing.JTextField originTxt;
     private javax.swing.JTextField projectNameTxt;
+    private javax.swing.JTextField taskNameTxt;
     // End of variables declaration//GEN-END:variables
 
     @Override

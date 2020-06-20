@@ -11,9 +11,19 @@ package models;
  */
 public class CopyTask {
     
+    private String taskName;
     private String origin;
     private String destination;
     private String status;
+    private boolean selected = true;
+
+    public String getTaskName() {
+        return taskName;
+    }
+
+    public void setTaskName(String taskName) {
+        this.taskName = taskName;
+    }
 
     public String getOrigin() {
         return origin;
@@ -37,6 +47,14 @@ public class CopyTask {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isSelected() {
+        return selected;
+    }
+
+    public void setSelected(boolean selected) {
+        this.selected = selected;
     }
     
     
