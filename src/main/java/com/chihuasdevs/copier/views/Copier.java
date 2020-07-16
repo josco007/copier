@@ -9,9 +9,11 @@ package com.chihuasdevs.copier.views;
 
 
 import com.chihuasdevs.utils.JTableUtils;
+import com.chihuasdevs.utils.UserPreferencesUtil;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -34,6 +36,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import org.buildobjects.process.ExternalProcessFailureException;
 import org.buildobjects.process.ProcBuilder;
 import org.buildobjects.process.ProcResult;
+import org.codehaus.plexus.util.FileUtils;
 
 /**
  *
@@ -343,9 +346,16 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             
             try {
                 String originFile = "\""+ copyTask.getOrigin()+ "\"";
+                String fileOriginName = FileUtils.filename(copyTask.getOrigin());
                 String destFile = "\""+copyTask.getDestination() + "\"";
-                String command = "cp -R "+originFile+" "+destFile ;
-                
+                String deleteDestCommand = "rm -R "+"\""+copyTask.getDestination() +"/"+ fileOriginName+"\"";
+                String command = "cp -Rf "+originFile+" "+destFile ;
+                try{
+                    this.executeCommand(deleteDestCommand);
+                } catch (ExternalProcessFailureException ex){
+                    System.out.println("Could not delete destination file ");
+                }
+ 
                 this.executeCommand(command);
                 copyTask.setStatus("OK :)");
             } catch (ExternalProcessFailureException ex) {
@@ -372,7 +382,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             if (this.copyTasksTbe.getSelectedRowCount() > 0) {
                 int selectedRow[] = this.copyTasksTbe.getSelectedRows();
                 for (int i=selectedRow.length-1; i>=0; i--) {
-                    model.removeRow(i);
+                    model.removeRow(selectedRow[i]);
                     this.copyTasks.remove(i);
                 }
             }
@@ -384,15 +394,28 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         mode = Mode.SavingProject;
         java.awt.EventQueue.invokeLater(() -> {
-            new FileChooserView(this,true, JFileChooser.DIRECTORIES_ONLY, this).setVisible(true);
+            String lastSavedProjectPath = UserPreferencesUtil.Paths.getLastSavedProjectPath();
+            File lastSavedProjectDir = null;
+            if (lastSavedProjectPath != null){
+                lastSavedProjectDir = new File(lastSavedProjectPath);
+            }
+            new FileChooserView(this,true, JFileChooser.DIRECTORIES_ONLY,lastSavedProjectDir, this).setVisible(true);
         });
         
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
         mode = Mode.OpeningProject;
+        
         java.awt.EventQueue.invokeLater(() -> {
-            new FileChooserView(this,true, new FileNameExtensionFilter("*.copier", "copier"), this).setVisible(true);
+            
+            String lastSavedProjectPath = UserPreferencesUtil.Paths.getLastOpenProjectPath();
+            File lastSavedProjectDir = null;
+            if (lastSavedProjectPath != null){
+                lastSavedProjectDir = new File(lastSavedProjectPath);
+            }
+            
+            new FileChooserView(this,true, lastSavedProjectDir, new FileNameExtensionFilter("*.copier", "copier"), this).setVisible(true);
             
         });
     }//GEN-LAST:event_jMenuItem2ActionPerformed
@@ -418,7 +441,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         CopyTask copyTask = copyTasks.get(selectedIdx);
         copyTasks.remove(selectedIdx);
         copyTasks.add(selectedIdx+1,copyTask);
-
+       
         reloadCopyTasksTbe(false);
         this.copyTasksTbe.setRowSelectionInterval(selectedIdx+1,selectedIdx+1 );
     }//GEN-LAST:event_moveDownBtnActionPerformed
@@ -469,6 +492,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             // Constructs a FileWriter given a file name, using the platform's default charset
             file = new FileWriter(path+"/"+projectNameTxt.getText()+".project.copier");
             file.write(json);
+            UserPreferencesUtil.Paths.setLastSavedProjectPath(path);
 
  
         } catch (IOException e) {
@@ -499,6 +523,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             this.projectNameTxt.setText(project.getName());
             this.copyTasks = project.getCopyTasks();
             reloadCopyTasksTbe(true);
+            UserPreferencesUtil.Paths.setLastOpenProjectPath(path);
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Copier.class.getName()).log(Level.SEVERE, null, ex);
         }

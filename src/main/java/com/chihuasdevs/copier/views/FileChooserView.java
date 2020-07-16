@@ -5,6 +5,7 @@
  */
 package com.chihuasdevs.copier.views;
 
+import java.io.File;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -24,17 +25,23 @@ public class FileChooserView extends javax.swing.JDialog {
     /**
      * Creates new form FileChooserView
      */
-    public FileChooserView(java.awt.Frame parent, boolean modal, int mode, FileChooserDelegate delegate) {
+    public FileChooserView(java.awt.Frame parent, boolean modal, int mode, File currentDir, FileChooserDelegate delegate) {
         super(parent, modal);
         initComponents();
         this.fileChooser.setFileSelectionMode(mode);
+        if (currentDir != null){
+            this.fileChooser.setCurrentDirectory(currentDir);
+        }
         this.delegate = delegate;
     }
     
-    public FileChooserView(java.awt.Frame parent, boolean modal, FileNameExtensionFilter fileNameExtesionFilter, FileChooserDelegate delegate) {
+    public FileChooserView(java.awt.Frame parent, boolean modal, File currentDir, FileNameExtensionFilter fileNameExtesionFilter, FileChooserDelegate delegate) {
         super(parent, modal);
         initComponents();
         this.fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        if (currentDir != null){
+            this.fileChooser.setCurrentDirectory(currentDir);
+        }
         this.delegate = delegate;
         fileChooser.setFileFilter(fileNameExtesionFilter);
     }
@@ -127,7 +134,7 @@ public class FileChooserView extends javax.swing.JDialog {
         /* Create and display the dialog */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                FileChooserView dialog = new FileChooserView(new javax.swing.JFrame(), true, JFileChooser.DIRECTORIES_ONLY, null);
+                FileChooserView dialog = new FileChooserView(new javax.swing.JFrame(), true, JFileChooser.DIRECTORIES_ONLY, null, null);
                 dialog.addWindowListener(new java.awt.event.WindowAdapter() {
                     @Override
                     public void windowClosing(java.awt.event.WindowEvent e) {
