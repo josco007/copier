@@ -54,6 +54,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
     
     private List<CopyTask> copyTasks = new ArrayList<>();
     private Mode mode;
+    private String loadedProjectPath;
 
     /**
      * Creates new form Copier
@@ -139,6 +140,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         jLabel4 = new javax.swing.JLabel();
         moveUpBtn = new javax.swing.JButton();
         moveDownBtn = new javax.swing.JButton();
+        autoSaveProjectCbx = new java.awt.Checkbox();
         jMenuBar2 = new javax.swing.JMenuBar();
         jMenu3 = new javax.swing.JMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
@@ -233,6 +235,9 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             }
         });
 
+        autoSaveProjectCbx.setLabel("Auto save project");
+        autoSaveProjectCbx.setState(true);
+
         jMenu3.setText("File");
 
         jMenuItem2.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_O, java.awt.event.InputEvent.CTRL_DOWN_MASK));
@@ -290,6 +295,10 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
                                 .addGap(18, 18, 18)
                                 .addComponent(taskNameTxt)))
                         .addContainerGap())))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(autoSaveProjectCbx, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(364, 364, 364))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -321,8 +330,11 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
                         .addComponent(moveUpBtn)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(moveDownBtn)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(autoSaveProjectCbx, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(copyAllBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 51, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(copyAllBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         pack();
@@ -341,7 +353,12 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
   
     
     private void copyAllBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_copyAllBtnActionPerformed
-        // TODO add your handling code here:
+        
+        
+        if (autoSaveProjectCbx.getState() && loadedProjectPath != null && loadedProjectPath.length() > 0){
+            saveProject(loadedProjectPath);
+        }
+        
         copyTasks.stream().filter(copyTask -> (copyTask.isSelected())).forEachOrdered(copyTask -> {
             
             try {
@@ -383,12 +400,12 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
                 int selectedRow[] = this.copyTasksTbe.getSelectedRows();
                 for (int i=selectedRow.length-1; i>=0; i--) {
                     model.removeRow(selectedRow[i]);
-                    this.copyTasks.remove(i);
+                    this.copyTasks.remove(selectedRow[i]);
                 }
             }
         }
         
-        //this.reloadCopyTasksTbe();
+        //reloadCopyTasksTbe(false);
     }//GEN-LAST:event_deleteSelectedBtnActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
@@ -490,7 +507,12 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
         try {
             
             // Constructs a FileWriter given a file name, using the platform's default charset
-            file = new FileWriter(path+"/"+projectNameTxt.getText()+".project.copier");
+            if (new File(path).isFile()){
+                file = new FileWriter(path);
+            }
+            else{
+                file = new FileWriter(path+"/"+projectNameTxt.getText()+".project.copier");
+            }
             file.write(json);
             UserPreferencesUtil.Paths.setLastSavedProjectPath(path);
 
@@ -524,6 +546,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
             this.copyTasks = project.getCopyTasks();
             reloadCopyTasksTbe(true);
             UserPreferencesUtil.Paths.setLastOpenProjectPath(path);
+            loadedProjectPath = path;
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Copier.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -567,6 +590,7 @@ public class Copier extends javax.swing.JFrame implements FileChooserDelegate {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextField DestinationTxt;
+    private java.awt.Checkbox autoSaveProjectCbx;
     private javax.swing.JButton copyAllBtn;
     private javax.swing.JTable copyTasksTbe;
     private javax.swing.JButton deleteSelectedBtn;
